@@ -1,0 +1,242 @@
+-- Game: https://www.roblox.com/games/815405518/The-Floor-Is-LAVA
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Appel-man/ExploitLibrary/main/Main.txt"))()
+local Window  = Library.CreateLib("The Floor Is Lava Script By Appelman", "Synapse")
+local Player  = game.Players.LocalPlayer
+-- MAIN
+local Main        = Window:NewTab("Main")
+local MainSection = Main:NewSection("Main")
+
+
+local goToDb   = false
+local goToLoop = false
+
+local maxflyspeed = 100
+local MapFolder   = workspace.CurrentMap
+local Lobby       = workspace.ZLobby
+
+for i, v in ipairs(Lobby.Obby:GetChildren()) do
+    if v.Name == "Head" and v:FindFirstChild("KillScript") then
+        v:Destroy()
+    end
+end
+
+function goTo()
+    if goToDb then return end
+    goToDb = true
+    local positionSave = Player.Character.HumanoidRootPart.Position
+
+
+
+    if #MapFolder:GetChildren() > 0 and MapFolder:GetChildren()[1]:FindFirstChild("Coins") and #MapFolder:GetChildren()[1].Coins:GetChildren() > 0 then
+        for i, v in ipairs(MapFolder:GetChildren()[1].Coins:GetChildren()) do
+            Player.Character.HumanoidRootPart.CFrame = v.CFrame
+            wait(0.1)
+        end
+    end
+
+    Player.Character:MoveTo(positionSave)
+    wait(0.5)
+    goToDb = false
+    return true
+end
+
+MainSection:NewButton("TP Coins", "Teleports You To All Coins", function()
+    goTo()
+end)
+
+MainSection:NewToggle("Auto Farm", "Loops The 'TP Coins' Function", function(state)
+    if state then
+        goToLoop = true
+        spawn(function()
+            while goToLoop do
+                repeat wait() until goTo()
+                wait(1)
+            end
+        end)
+    else
+        goToLoop = false
+    end
+end)
+
+MainSection:NewButton("TP Obby Finish", "Teleports You To The Obby Finish", function()
+    Player.Character:MoveTo(Lobby.Obby.Head.Position)
+end)
+
+MainSection:NewButton("TP Spawn", "Teleports You To Spawn", function()
+    Player.Character:MoveTo(workspace.ZLobby.SpawnLocation.Position)
+end)
+
+MainSection:NewButton("TP In Game", "Teleports You Ingame", function()
+    Player.Character:MoveTo(workspace.Game.MainBase.Position)
+end)
+
+--LOCAL PLAYER
+local PlayerTab     = Window:NewTab("Player")
+local PlayerSection = PlayerTab:NewSection("Player")
+
+PlayerSection:NewSlider("Walkspeed", "SPEED!!", 500, 16, function(s)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s
+end)
+
+PlayerSection:NewSlider("Jumppower", "JUMP HIGH!!", 350, 50, function(s)
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = s
+end)
+
+PlayerSection:NewButton("Fly", "Gives You The Ability To Fly", function()
+    --Waits until the player is in game
+repeat wait()
+until game.Players.LocalPlayer and game.Players.LocalPlayer.Character and (game.Players.LocalPlayer.Character:findFirstChild("Torso") or game.Players.LocalPlayer.Character:findFirstChild("UpperTorso")) and game.Players.LocalPlayer.Character:findFirstChild("Humanoid")
+local mouse = game.Players.LocalPlayer:GetMouse()
+
+--Waits until the player's mouse is found
+repeat wait() until mouse
+
+--Variables
+local plr = game.Players.LocalPlayer
+local flying = true
+local deb = true
+local ctrl = {f = 0, b = 0, l = 0, r = 0}
+local lastctrl = {f = 0, b = 0, l = 0, r = 0}
+local speed = 0
+local bg = nil
+local bv = nil
+local Brute = true
+
+--Actual flying
+game.StarterGui:SetCore("SendNotification", {Title="Appelman Script"; Text="Press E to brute fly and F to smooth fly!"; Duration=5;})
+function Fly()
+local torso = plr.Character:FindFirstChild("Torso") or plr.Character:FindFirstChild("UpperTorso")
+    bg = Instance.new("BodyGyro", torso)
+    bg.P = 9e4
+    bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+    bg.cframe = torso.CFrame
+    bv = Instance.new("BodyVelocity", torso)
+    bv.velocity = Vector3.new(0,0.1,0)
+    bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+    repeat wait()
+        if not plr.Character:FindFirstChild("Humanoid") then return end
+        plr.Character.Humanoid.PlatformStand = true
+        if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
+            if Brute then
+                speed = maxflyspeed
+            else
+                speed = speed+.5+(speed/maxflyspeed)
+                if speed > maxflyspeed then
+                    speed = maxflyspeed
+                end
+            end
+        elseif not (ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0) and speed ~= 0 then
+            if Brute then
+                speed = 0
+            else
+                speed = speed-1
+                if speed < 0 then
+                    speed = 0
+                end
+            end
+        end
+        if (ctrl.l + ctrl.r) ~= 0 or (ctrl.f + ctrl.b) ~= 0 then
+            bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r,(ctrl.f+ctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
+            lastctrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
+        elseif (ctrl.l + ctrl.r) == 0 and (ctrl.f + ctrl.b) == 0 and speed ~= 0 then
+            bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lastctrl.f+lastctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lastctrl.l+lastctrl.r,(lastctrl.f+lastctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
+        else
+            bv.velocity = Vector3.new(0,0.1,0)
+        end
+        bg.cframe = game.Workspace.CurrentCamera.CoordinateFrame * CFrame.Angles(-math.rad((ctrl.f+ctrl.b)*50*speed/maxflyspeed),0,0)
+    until not flying
+    ctrl = {f = 0, b = 0, l = 0, r = 0}
+    lastctrl = {f = 0, b = 0, l = 0, r = 0}
+    speed = 0
+    bg:Destroy()
+    bg = nil
+    bv:Destroy()
+    bv = nil
+    plr.Character.Humanoid.PlatformStand = false
+end
+
+--Controls
+mouse.KeyDown:connect(function(key)
+    if key:lower() == "e" then
+        if flying and Brute then 
+            flying = false
+        elseif flying then
+            flying = false
+            wait()
+            flying = true
+            Brute = true
+            Fly()
+        else
+            flying = true
+            Brute = true
+            Fly()
+        end
+    elseif key:lower() == "f" then
+        if flying and not Brute then 
+            flying = false
+        elseif flying then
+            flying = false
+            wait()
+            flying = true
+            Brute = false
+            Fly()
+        else
+            flying = true
+            Brute = false
+            Fly()
+        end
+    elseif key:lower() == "w" then
+        ctrl.f = 1
+    elseif key:lower() == "s" then
+        ctrl.b = -1
+    elseif key:lower() == "a" then
+        ctrl.l = -1
+    elseif key:lower() == "d" then
+        ctrl.r = 1
+    end
+end)
+
+mouse.KeyUp:connect(function(key)
+    if key:lower() == "w" then
+        ctrl.f = 0
+    elseif key:lower() == "s" then
+        ctrl.b = 0
+    elseif key:lower() == "a" then
+        ctrl.l = 0
+    elseif key:lower() == "d" then
+        ctrl.r = 0
+    end
+end)
+
+Fly()
+end)
+
+PlayerSection:NewSlider("Fly Speed", "Change Fly Speed", 1000, 10, function(s)
+    maxflyspeed = s
+end)
+
+PlayerSection:NewButton("Btools", "Gives You BTools", function()
+    local Player = game.Players.LocalPlayer
+    local Hammer = Instance.new('HopperBin')
+    Hammer.BinType = 'Hammer'
+    Hammer.Name = 'Hammer'
+    Hammer.Parent = Player.Backpack
+    Hammer:Clone().Parent = Player.StarterGear
+
+    local Clone = Instance.new('HopperBin')
+    Clone.BinType = 'Clone'
+    Clone.Name = 'Clone'
+    Clone.Parent = Player.Backpack
+    Clone:Clone().Parent = Player.StarterGear
+
+    local Grab = Instance.new('HopperBin')
+    Grab.BinType = 'Grab'
+    Grab.Name = 'Grab'
+    Grab.Parent = Player.Backpack
+    Grab:Clone().Parent = Player.StarterGear
+end)
+
+PlayerSection:NewButton("Inf Yield Admin", "FE Admin Commands", function()
+    loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'),true))()
+end)
